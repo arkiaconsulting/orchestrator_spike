@@ -1,21 +1,40 @@
+using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using SharedLanguage;
 
 namespace BusinessWorker
 {
     public class SecurityCheck
     {
-        private readonly ILogger _logger;
+        private readonly OrchestratorSender sender;
+        private readonly ILogger<SecurityCheck> logger;
 
-        public SecurityCheck(ILoggerFactory loggerFactory)
+        public SecurityCheck(
+            OrchestratorSender sender,
+            ILogger<SecurityCheck> logger)
         {
-            _logger = loggerFactory.CreateLogger<SecurityCheck>();
+            this.sender = sender;
+            this.logger = logger;
         }
 
         [Function("SecurityCheck")]
-        public void Run([ServiceBusTrigger("security-check", Connection = "SBConnectionString")] string myQueueItem)
+        // https://github.com/Azure/azure-sdk-for-net/issues/21884
+        //[ServiceBusOutput("orchestrator", Connection = "SBConnectionString")]
+        public async Task Run(
+            [ServiceBusTrigger("security-check", Connection = "SBConnectionString")] CheckSecurityCommand command,
+            string correlationId)
         {
-            _logger.LogInformation("Producing SecurityChecked");
+            logger.LogInformation($"Consuming {nameof(CheckSecurityCommand)} {{TicketId}}", command.TicketId);
+
+            logger.LogInformation($"Publishing {nameof(SecurityCheckedEvent)} {{TicketId}}", command.TicketId);
+
+            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(new SecurityCheckedEvent(command.TicketId)))
+            {
+                Subject = nameof(SecurityCheckedEvent),
+                CorrelationId = correlationId
+            };
+            await sender.SendMessageAsync(message);
         }
     }
 }

@@ -1,21 +1,24 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using SharedLanguage;
 
 namespace Orchestrator
 {
     public class DispatchedHandler
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<DispatchedHandler> logger;
 
-        public DispatchedHandler(ILoggerFactory loggerFactory)
+        public DispatchedHandler(ILogger<DispatchedHandler> logger)
         {
-            _logger = loggerFactory.CreateLogger<DispatchedHandler>();
+            this.logger = logger;
         }
 
         [Function("DispatchedHandler")]
-        public void Run([ServiceBusTrigger("orchestrator", "dispatched", Connection = "SBConnectionString")] string myQueueItem)
+        public void Run([ServiceBusTrigger("orchestrator", "dispatched", Connection = "SBConnectionString")] DispatchedEvent @event)
         {
-            _logger.LogInformation("Handling Dispatched");
+            logger.LogInformation($"Handling {nameof(DispatchedEvent)} {{TicketId}}", @event.TicketId);
+
+            logger.LogInformation($"Workflow ended {{TicketId}}", @event.TicketId);
         }
     }
 }

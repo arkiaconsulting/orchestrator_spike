@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orchestrator", "Orchestrato
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessWorker", "BusinessWorker\BusinessWorker.csproj", "{78286D97-5298-469C-B1C7-AFF5886D7466}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedLanguage", "SharedLanguage\SharedLanguage.csproj", "{2BF0D8CC-6284-4D8D-B726-47271D3F7086}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{78286D97-5298-469C-B1C7-AFF5886D7466}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78286D97-5298-469C-B1C7-AFF5886D7466}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78286D97-5298-469C-B1C7-AFF5886D7466}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BF0D8CC-6284-4D8D-B726-47271D3F7086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BF0D8CC-6284-4D8D-B726-47271D3F7086}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BF0D8CC-6284-4D8D-B726-47271D3F7086}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BF0D8CC-6284-4D8D-B726-47271D3F7086}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

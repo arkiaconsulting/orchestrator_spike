@@ -1,21 +1,39 @@
+using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using SharedLanguage;
 
 namespace BusinessWorker
 {
     public class Dispatch
     {
-        private readonly ILogger _logger;
+        private readonly OrchestratorSender sender;
+        private readonly ILogger<Dispatch> logger;
 
-        public Dispatch(ILoggerFactory loggerFactory)
+        public Dispatch(
+            OrchestratorSender sender,
+            ILogger<Dispatch> logger)
         {
-            _logger = loggerFactory.CreateLogger<Dispatch>();
+            this.sender = sender;
+            this.logger = logger;
         }
 
         [Function("Dispatch")]
-        public void Run([ServiceBusTrigger("dispatch", Connection = "SBConnectionString")] string myQueueItem)
+        // https://github.com/Azure/azure-sdk-for-net/issues/21884
+        //[ServiceBusOutput("orchestrator", Connection = "SBConnectionString")]
+        public async Task Run([ServiceBusTrigger("dispatch", Connection = "SBConnectionString")] DispatchCommand command,
+            string correlationId)
         {
-            _logger.LogInformation("Producing Dispatched");
+            logger.LogInformation($"Consuming {nameof(DispatchCommand)} {{TicketId}}", command.TicketId);
+
+            logger.LogInformation($"Publishing {nameof(DispatchedEvent)} {{TicketId}}", command.TicketId);
+
+            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(new DispatchedEvent(command.TicketId)))
+            {
+                Subject = nameof(DispatchedEvent),
+                CorrelationId = correlationId
+            };
+            await sender.SendMessageAsync(message);
         }
     }
 }
