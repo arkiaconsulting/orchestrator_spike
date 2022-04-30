@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BusinessWorker": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7071"
+    }
+  }
+}

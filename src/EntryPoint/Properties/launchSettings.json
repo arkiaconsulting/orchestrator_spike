@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EntryPoint": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7072"
+    }
+  }
+}

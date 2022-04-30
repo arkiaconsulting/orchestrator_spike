@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Orchestrator": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7073"
+    }
+  }
+}
