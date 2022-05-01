@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akc.Saga\Akc.Saga.csproj" />
     <ProjectReference Include="..\SharedLanguage\SharedLanguage.csproj" />
   </ItemGroup>
   <ItemGroup>

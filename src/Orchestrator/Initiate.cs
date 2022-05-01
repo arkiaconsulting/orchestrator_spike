@@ -1,20 +1,21 @@
-using Azure.Messaging.ServiceBus;
+using Akc.Saga;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Orchestrator.Saga;
 using SharedLanguage;
 
 namespace Orchestrator
 {
     public class Initiate
     {
-        private readonly SecurityCheckSender sender;
+        private readonly SagaManager sagaManager;
         private readonly ILogger<Initiate> logger;
 
         public Initiate(
-            SecurityCheckSender sender,
+            SagaManager sagaManager,
             ILogger<Initiate> logger)
         {
-            this.sender = sender;
+            this.sagaManager = sagaManager;
             this.logger = logger;
         }
 
@@ -27,14 +28,9 @@ namespace Orchestrator
         {
             logger.LogInformation($"Consuming {nameof(InitiateCommand)} {{TicketId}}", command.TicketId);
 
-            logger.LogInformation($"Publishing {nameof(CheckSecurityCommand)} {{TicketId}}", command.TicketId);
+            var sagaEvent = new InitiatedSagaEvent(command.TicketId);
 
-            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(new CheckSecurityCommand(command.TicketId)))
-            {
-                Subject = nameof(CheckSecurityCommand),
-                CorrelationId = correlationId
-            };
-            await sender.SendMessageAsync(message);
+            sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(command.TicketId.ToString(), sagaEvent);
         }
     }
 }
