@@ -21,7 +21,7 @@ namespace Orchestrator
         }
 
         [Function("DispatchedHandler")]
-        public void Run([ServiceBusTrigger("orchestrator", "dispatched", Connection = "SBConnectionString")] DispatchedEvent @event)
+        public async Task Run([ServiceBusTrigger("orchestrator", "dispatched", Connection = "SBConnectionString")] DispatchedEvent @event)
         {
             logger.LogInformation($"Handling {nameof(DispatchedEvent)} {{TicketId}}", @event.TicketId);
 
@@ -29,7 +29,7 @@ namespace Orchestrator
 
             var sagaEvent = new DispatchedSagaEvent(@event.TicketId.ToString());
 
-            sagaManager.Handle<InvoiceDepositSaga, DispatchedSagaEvent>(sagaEvent);
+            await sagaManager.Handle<InvoiceDepositSaga, DispatchedSagaEvent>(sagaEvent);
         }
     }
 }

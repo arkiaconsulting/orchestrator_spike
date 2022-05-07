@@ -10,24 +10,27 @@ namespace Akc.Saga
 
         private readonly ICollection<ISagaCommand> _pendingCommands = new List<ISagaCommand>();
 
-        protected void Publish<T>(T command, IMessageContext context) where T : ISagaCommand
+        protected Task Publish<T>(T command, IMessageContext context) where T : ISagaCommand
         {
             if (!context.IsRehydrating)
             {
                 _pendingCommands.Add(command);
             }
+
+            return Task.CompletedTask;
         }
 
-        internal void Rehydrate(IEnumerable<ISagaEvent> events)
+        internal async Task Rehydrate(IEnumerable<ISagaEvent> events)
         {
-            var messageContext = new AkcSagaMessageContext { IsRehydrating = true };
+            var messageContext = new MessageContext { IsRehydrating = true };
 
             foreach (var @event in events)
             {
                 var handlerType = typeof(ISagaEventHandler<>).MakeGenericType(@event.GetType());
                 var method = handlerType.GetMethod(nameof(ISagaEventHandler<ISagaEvent>.Handle));
 
-                method!.Invoke(this, new object[] { @event, messageContext });
+                var task = (Task)method!.Invoke(this, new object[] { @event, messageContext })!;
+                await task;
             }
         }
     }

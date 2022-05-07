@@ -1,24 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Akc.Saga;
+using Akc.Saga.InMemory;
 
-namespace Akc.Saga
+namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class ConfigurationExtensions
+    public static partial class ConfigurationExtensions
     {
-        public static IServiceCollection AddAkcSagaAzureServiceBus(
-            this IServiceCollection services,
-            Action<AkcSagaAzureServiceBusOptions> configure)
-        {
-            services.AddOptions<AkcSagaAzureServiceBusOptions>()
-                .Configure(configure);
-
-            services
-                .AddSingleton<AzureServiceBusEntityLocator>()
-                .AddSingleton<ISagaEventStore, InMemorySagaEventStore>()
-                .AddTransient<ISagaMessageBus, AzureServiceBusMessageBus>();
-
-            return services;
-        }
-
         public static IServiceCollection AddAkcSaga(
             this IServiceCollection services,
             Action<AkcSagaConfiguration> configure
@@ -29,15 +15,15 @@ namespace Akc.Saga
 
             return services
                 .AddSingleton<ISagaEventStore, InMemorySagaEventStore>()
-                .AddSingleton<ISagaOutbox, InMemorySagaOutbox>()
-                .AddSingleton<ISagaMessageBus, InMemorySagaMessageBus>()
+                .AddSingleton<ISagaCommandOutbox, InMemorySagaCommandOutbox>()
+                .AddSingleton<ISagaCommandPublisher, InMemorySagaCommandPublisher>()
                 .AddSingleton(sagaConfiguration)
                 .AddTransient(sp =>
                 {
                     return new SagaHost(
                         sagaConfiguration,
                         sp.GetRequiredService<ISagaEventStore>(),
-                        sp.GetRequiredService<ISagaOutbox>()
+                        sp.GetRequiredService<ISagaCommandOutbox>()
                     );
                 });
         }

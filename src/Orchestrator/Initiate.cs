@@ -23,7 +23,7 @@ namespace Orchestrator
         [Function("Initiate")]
         // https://github.com/Azure/azure-sdk-for-net/issues/21884
         //[ServiceBusOutput("security-check", Connection = "SBConnectionString")]
-        public Task Run(
+        public async Task Run(
             [ServiceBusTrigger("initiate", Connection = "SBConnectionString")] InitiateCommand command,
             string correlationId)
         {
@@ -31,9 +31,7 @@ namespace Orchestrator
 
             var sagaEvent = new InitiatedSagaEvent(command.TicketId.ToString());
 
-            sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(sagaEvent);
-
-            return Task.CompletedTask;
+            await sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(sagaEvent);
         }
     }
 }

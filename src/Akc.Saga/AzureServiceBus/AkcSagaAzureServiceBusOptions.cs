@@ -1,4 +1,4 @@
-﻿namespace Akc.Saga
+﻿namespace Akc.Saga.AzureServiceBus
 {
     public class AkcSagaAzureServiceBusOptions
     {

@@ -22,7 +22,7 @@ namespace Orchestrator
         [Function("SecurityCheckedHandler")]
         // https://github.com/Azure/azure-sdk-for-net/issues/21884
         //[ServiceBusOutput("dispatch", Connection = "SBConnectionString")]
-        public Task Run(
+        public async Task Run(
             [ServiceBusTrigger("orchestrator", "security-checked", Connection = "SBConnectionString")] SecurityCheckedEvent @event,
             string correlationId)
         {
@@ -30,9 +30,7 @@ namespace Orchestrator
 
             var sagaEvent = new SecurityCheckedSagaEvent(@event.TicketId.ToString());
 
-            sagaManager.Handle<InvoiceDepositSaga, SecurityCheckedSagaEvent>(sagaEvent);
-
-            return Task.CompletedTask;
+            await sagaManager.Handle<InvoiceDepositSaga, SecurityCheckedSagaEvent>(sagaEvent);
         }
     }
 }

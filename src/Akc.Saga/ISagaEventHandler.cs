@@ -2,6 +2,6 @@
 {
     public interface ISagaEventHandler<T> where T : ISagaEvent
     {
-        void Handle(T @event, IMessageContext context);
+        Task Handle(T @event, IMessageContext context);
     }
 }

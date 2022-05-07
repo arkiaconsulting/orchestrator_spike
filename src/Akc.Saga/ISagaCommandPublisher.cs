@@ -1,9 +1,7 @@
 ﻿namespace Akc.Saga
 {
-    public interface ISagaMessageBus
+    public interface ISagaCommandPublisher
     {
-        IEnumerable<ISagaCommand> Commands { get; }
-
         Task Publish<T>(T message) where T : ISagaCommand;
     }
 }

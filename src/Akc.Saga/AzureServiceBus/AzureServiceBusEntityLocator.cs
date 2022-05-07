@@ -1,7 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
 
-namespace Akc.Saga
+namespace Akc.Saga.AzureServiceBus
 {
     internal class AzureServiceBusEntityLocator
     {
@@ -16,8 +16,10 @@ namespace Akc.Saga
             _senders = senders;
         }
 
-        public ServiceBusSender Locate(Type commandType)
+        public ServiceBusSender Locate<T>(T command) where T : ISagaCommand
         {
+            var commandType = command.GetType();
+
             var registered = _registrations.TryGetValue(commandType, out var registeredServiceBusEntity);
             if (!registered)
             {

@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+using Akc.Saga.InMemory;
 using AutoFixture.Xunit2;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,8 +12,8 @@ namespace Akc.Saga.Tests
     public class SagaShould
     {
         private SagaHost SagaHost => _host.Services.GetRequiredService<SagaHost>();
-        private ISagaOutbox Outbox => _host.Services.GetRequiredService<ISagaOutbox>();
-        private ISagaMessageBus MessageBus => _host.Services.GetRequiredService<ISagaMessageBus>();
+        private ISagaCommandOutbox Outbox => _host.Services.GetRequiredService<ISagaCommandOutbox>();
+        private ISagaCommandPublisher MessageBus => _host.Services.GetRequiredService<ISagaCommandPublisher>();
 
         private readonly IHost _host;
 
@@ -31,79 +33,62 @@ namespace Akc.Saga.Tests
 
         [Theory(DisplayName = "Create the order when the buyer creates it")]
         [AutoData]
-        public void Test01(string orderId)
+        public async Task Test01(string orderId)
         {
-            SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId));
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId));
 
             AssertCommandPublished(new CreateOrder(orderId));
         }
 
         [Theory(DisplayName = "Not ship the goods if the order hasn't been created")]
         [AutoData]
-        public void Test02(string orderId)
+        public async Task Test02(string orderId)
         {
-            SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId));
+            await SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId));
 
             AssertNoCommandProduced();
         }
 
         [Theory(DisplayName = "Ship the goods when the payment is received")]
         [AutoData]
-        public void Test03(string orderId)
+        public async Task Test03(string orderId)
         {
-            SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId));
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId));
 
-            SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId));
+            await SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId));
 
             AssertCommandPublished(new ShipOrder(orderId));
+        }
+
+        [Theory(DisplayName = "Not ship the goods of another order")]
+        [AutoData]
+        public async Task Test04(string orderId1, string orderId2)
+        {
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId1));
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId2));
+
+            await SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId1));
+
+            AssertCommandNotPublished(new ShipOrder(orderId2));
         }
 
         #region Private
 
         private void AssertNoCommandProduced()
         {
-            Outbox.Commands.Should().BeEmpty();
+            (Outbox as InMemorySagaCommandOutbox)!.Commands.Should().BeEmpty();
         }
 
         private void AssertCommandPublished<T>(T command) where T : ISagaCommand
         {
-            MessageBus.Commands.Should().Contain(command);
+            (MessageBus as InMemorySagaCommandPublisher)!.Commands.Should().Contain(command);
+        }
+
+        private void AssertCommandNotPublished<T>(T command) where T : ISagaCommand
+        {
+            (MessageBus as InMemorySagaCommandPublisher)!.Commands.Should().NotContain(command);
         }
 
         #endregion
-    }
-
-    internal record OrderCreated(string OrderId) : ISagaEvent;
-    internal record PaymentReceived(string OrderId) : ISagaEvent;
-    internal record CreateOrder(string OrderId) : ISagaCommand
-    {
-        public string Type { get; } = nameof(CreateOrder);
-    }
-
-    internal record ShipOrder(string OrderId) : ISagaCommand
-    {
-        public string Type { get; } = nameof(ShipOrder);
-    }
-
-    internal class MyOrderWorkflow : Saga,
-        ISagaEventHandler<OrderCreated>,
-        ISagaEventHandler<PaymentReceived>
-    {
-        private bool _created = false;
-
-        public void Handle(OrderCreated @event, IMessageContext context)
-        {
-            _created = true;
-
-            Publish(new CreateOrder(@event.OrderId), context);
-        }
-
-        public void Handle(PaymentReceived @event, IMessageContext context)
-        {
-            if (_created)
-            {
-                Publish(new ShipOrder(@event.OrderId), context);
-            }
-        }
     }
 }

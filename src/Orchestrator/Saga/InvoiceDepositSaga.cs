@@ -8,18 +8,19 @@ namespace Orchestrator.Saga
         ISagaEventHandler<SecurityCheckedSagaEvent>,
         ISagaEventHandler<DispatchedSagaEvent>
     {
-        public void Handle(InitiatedSagaEvent @event, IMessageContext context)
+        public Task Handle(InitiatedSagaEvent @event, IMessageContext context)
         {
-            Publish(new CheckSecuritySagaCommand(@event.TicketId), context);
+            return Publish(new CheckSecuritySagaCommand(@event.TicketId), context);
         }
 
-        public void Handle(SecurityCheckedSagaEvent @event, IMessageContext context)
+        public Task Handle(SecurityCheckedSagaEvent @event, IMessageContext context)
         {
-            Publish(new DispatchSagaCommand(@event.TicketId), context);
+            return Publish(new DispatchSagaCommand(@event.TicketId), context);
         }
 
-        public void Handle(DispatchedSagaEvent @event, IMessageContext context)
+        public Task Handle(DispatchedSagaEvent @event, IMessageContext context)
         {
+            return Task.CompletedTask;
         }
     }
 }

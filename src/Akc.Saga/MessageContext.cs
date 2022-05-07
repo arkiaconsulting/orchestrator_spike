@@ -1,7 +1,7 @@
 ﻿
 namespace Akc.Saga
 {
-    internal class AkcSagaMessageContext : IMessageContext
+    internal class MessageContext : IMessageContext
     {
         public bool IsRehydrating { get; internal set; }
     }
