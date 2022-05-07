@@ -72,6 +72,18 @@ namespace Akc.Saga.Tests
             AssertCommandNotPublished(new ShipOrder(orderId2));
         }
 
+        [Theory(DisplayName = "Not ship a second time once the saga has already completed")]
+        [AutoData]
+        public async Task Test05(string orderId)
+        {
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId));
+
+            await SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId));
+            await SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(new PaymentReceived(orderId));
+
+            AssertCommandPublishedSingleTime(new ShipOrder(orderId));
+        }
+
         #region Private
 
         private void AssertNoCommandProduced()
@@ -87,6 +99,12 @@ namespace Akc.Saga.Tests
         private void AssertCommandNotPublished<T>(T command) where T : ISagaCommand
         {
             (MessageBus as InMemorySagaCommandPublisher)!.Commands.Should().NotContain(command);
+        }
+
+        private void AssertCommandPublishedSingleTime<T>(T command) where T : class, ISagaCommand
+        {
+            (MessageBus as InMemorySagaCommandPublisher)!.Commands
+                .Should().ContainSingle(c => c is T && (T)c == command);
         }
 
         #endregion

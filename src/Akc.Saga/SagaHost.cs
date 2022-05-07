@@ -23,6 +23,11 @@
             var sagaId = configuration.GetSagaId<T, TEvent>(@event);
             var saga = await Get<T>(sagaId);
 
+            if (saga.Completed)
+            {
+                return;
+            }
+
             await saga.Handle(@event, new MessageContext { IsRehydrating = false });
 
             foreach (var command in saga.PendingCommands)
@@ -40,7 +45,7 @@
             var events = await eventStore.Load(rootId);
             await instance.Rehydrate(events);
 
-            return (T)instance;
+            return instance;
         }
     }
 }

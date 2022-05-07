@@ -6,6 +6,8 @@ namespace Akc.Saga
 {
     public abstract class Saga
     {
+        public bool Completed { get; private set; }
+
         internal IEnumerable<ISagaCommand> PendingCommands => _pendingCommands;
 
         private readonly ICollection<ISagaCommand> _pendingCommands = new List<ISagaCommand>();
@@ -18,6 +20,11 @@ namespace Akc.Saga
             }
 
             return Task.CompletedTask;
+        }
+
+        protected void MarkAsComplete()
+        {
+            Completed = true;
         }
 
         internal async Task Rehydrate(IEnumerable<ISagaEvent> events)

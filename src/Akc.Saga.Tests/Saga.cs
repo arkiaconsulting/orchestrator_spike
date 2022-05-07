@@ -31,6 +31,8 @@ namespace Akc.Saga.Tests
         {
             if (_created)
             {
+                MarkAsComplete();
+
                 return Publish(new ShipOrder(@event.OrderId), context);
             }
 
