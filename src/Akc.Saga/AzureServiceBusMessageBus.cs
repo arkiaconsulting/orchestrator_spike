@@ -1,9 +1,13 @@
-﻿using Azure.Messaging.ServiceBus;
+﻿using System.Text.Json;
+using Azure.Messaging.ServiceBus;
 
 namespace Akc.Saga
 {
     internal class AzureServiceBusMessageBus : ISagaMessageBus
     {
+        IEnumerable<ISagaCommand> ISagaMessageBus.Commands => _publishedCommands;
+        private readonly ICollection<ISagaCommand> _publishedCommands = new List<ISagaCommand>();
+
         private readonly AzureServiceBusEntityLocator entityLocator;
 
         public AzureServiceBusMessageBus(AzureServiceBusEntityLocator entityLocator)
@@ -13,9 +17,11 @@ namespace Akc.Saga
 
         async Task ISagaMessageBus.Publish<T>(T message)
         {
-            var sender = entityLocator.Locate<T>();
+            var commandType = message.GetType();
+            var sender = entityLocator.Locate(commandType);
 
-            await sender.SendMessageAsync(new ServiceBusMessage(BinaryData.FromObjectAsJson(message))
+            var data = new BinaryData(JsonSerializer.SerializeToUtf8Bytes(message, commandType));
+            await sender.SendMessageAsync(new ServiceBusMessage(data)
             {
                 Subject = message.Type
             });

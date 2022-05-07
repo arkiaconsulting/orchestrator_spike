@@ -2,5 +2,7 @@
 
 namespace Orchestrator.Saga
 {
-    internal record InitiatedSagaEvent(Guid TicketId) : ISagaEvent;
+    internal record InitiatedSagaEvent(string TicketId) : ISagaEvent;
+    internal record SecurityCheckedSagaEvent(string TicketId) : ISagaEvent;
+    internal record DispatchedSagaEvent(string TicketId) : ISagaEvent;
 }

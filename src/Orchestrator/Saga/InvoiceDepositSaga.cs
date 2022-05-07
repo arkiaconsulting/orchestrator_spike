@@ -4,21 +4,22 @@ using ASaga = Akc.Saga.Saga;
 namespace Orchestrator.Saga
 {
     internal class InvoiceDepositSaga : ASaga,
-        ISagaEventHandler<InitiatedSagaEvent>
+        ISagaEventHandler<InitiatedSagaEvent>,
+        ISagaEventHandler<SecurityCheckedSagaEvent>,
+        ISagaEventHandler<DispatchedSagaEvent>
     {
-        public InvoiceDepositSaga(string id)
-            : base(id)
+        public void Handle(InitiatedSagaEvent @event, IMessageContext context)
         {
+            Publish(new CheckSecuritySagaCommand(@event.TicketId), context);
         }
 
-        public void Handle(InitiatedSagaEvent @event)
+        public void Handle(SecurityCheckedSagaEvent @event, IMessageContext context)
         {
-            Publish(new CheckSecuritySagaCommand(@event.TicketId));
+            Publish(new DispatchSagaCommand(@event.TicketId), context);
         }
 
-        public void Apply(InitiatedSagaEvent @event)
+        public void Handle(DispatchedSagaEvent @event, IMessageContext context)
         {
-            throw new NotImplementedException();
         }
     }
 }

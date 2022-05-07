@@ -8,14 +8,14 @@ namespace Orchestrator
     {
         public static IServiceCollection AddDispatchSender(this IServiceCollection services, IConfiguration configuration)
         {
-            return services.AddSingleton(_ =>
+            return services.AddSingleton<ServiceBusSender>(_ =>
                 new DispatchSender(new ServiceBusClient(configuration["SBConnectionString"]))
             );
         }
 
         public static IServiceCollection AddSecurityCheckSender(this IServiceCollection services, IConfiguration configuration)
         {
-            return services.AddSingleton(_ =>
+            return services.AddSingleton<ServiceBusSender>(_ =>
                 new SecurityCheckSender(new ServiceBusClient(configuration["SBConnectionString"]))
             );
         }

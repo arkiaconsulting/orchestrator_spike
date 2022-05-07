@@ -9,9 +9,16 @@ var host = new HostBuilder()
         services
         .AddSecurityCheckSender(ctx.Configuration)
         .AddDispatchSender(ctx.Configuration)
+        .AddAkcSaga(config =>
+        {
+            config.Register<InvoiceDepositSaga, InitiatedSagaEvent>(e => e.TicketId);
+            config.Register<InvoiceDepositSaga, SecurityCheckedSagaEvent>(e => e.TicketId);
+            config.Register<InvoiceDepositSaga, DispatchedSagaEvent>(e => e.TicketId);
+        })
         .AddAkcSagaAzureServiceBus(options =>
         {
             options.RegisterMessageEntity<CheckSecuritySagaCommand>("security-check");
+            options.RegisterMessageEntity<DispatchSagaCommand>("dispatch");
         })
     )
     .Build();

@@ -14,14 +14,14 @@
             return _events[rootId];
         }
 
-        void ISagaEventStore.Save(string rootId, ISagaEvent @event)
+        void ISagaEventStore.Save<TEvent>(string sagaId, TEvent @event)
         {
-            if (!_events.ContainsKey(rootId))
+            if (!_events.ContainsKey(sagaId))
             {
-                _events.Add(rootId, new List<ISagaEvent>());
+                _events.Add(sagaId, new List<ISagaEvent>());
             }
 
-            _events[rootId].Add(@event);
+            _events[sagaId].Add(@event);
         }
     }
 }

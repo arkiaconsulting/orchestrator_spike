@@ -16,9 +16,21 @@ namespace Akc.Saga
             _senders = senders;
         }
 
-        public ServiceBusSender Locate<T>()
+        public ServiceBusSender Locate(Type commandType)
         {
-            return _senders.Single(s => s.EntityPath == _registrations[typeof(T)]);
+            var registered = _registrations.TryGetValue(commandType, out var registeredServiceBusEntity);
+            if (!registered)
+            {
+                throw new InvalidOperationException($"Unable to locate any Service Bus registration for the given type '{commandType.Name}'");
+            }
+
+            var registeredSender = _senders.FirstOrDefault(s => s.EntityPath == registeredServiceBusEntity);
+            if (registeredSender is null)
+            {
+                throw new InvalidOperationException($"No sender was found for the Service Bus entity '{registeredServiceBusEntity}'");
+            }
+
+            return registeredSender;
         }
     }
 }

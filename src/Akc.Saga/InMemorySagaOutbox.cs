@@ -5,10 +5,16 @@
         IEnumerable<ISagaCommand> ISagaOutbox.Commands => _commands;
 
         private readonly ICollection<ISagaCommand> _commands = new List<ISagaCommand>();
+        private readonly ISagaMessageBus messageBus;
+
+        public InMemorySagaOutbox(ISagaMessageBus messageBus)
+        {
+            this.messageBus = messageBus;
+        }
 
         void ISagaOutbox.Publish<T>(T command)
         {
-            _commands.Add(command);
+            messageBus.Publish(command);
         }
     }
 }

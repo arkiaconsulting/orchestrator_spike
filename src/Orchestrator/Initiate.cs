@@ -8,29 +8,32 @@ namespace Orchestrator
 {
     public class Initiate
     {
-        private readonly SagaManager sagaManager;
+        private readonly SagaHost sagaManager;
         private readonly ILogger<Initiate> logger;
 
         public Initiate(
-            SagaManager sagaManager,
+            SagaHost sagaManager,
             ILogger<Initiate> logger)
         {
             this.sagaManager = sagaManager;
+
             this.logger = logger;
         }
 
         [Function("Initiate")]
         // https://github.com/Azure/azure-sdk-for-net/issues/21884
         //[ServiceBusOutput("security-check", Connection = "SBConnectionString")]
-        public async Task Run(
+        public Task Run(
             [ServiceBusTrigger("initiate", Connection = "SBConnectionString")] InitiateCommand command,
             string correlationId)
         {
             logger.LogInformation($"Consuming {nameof(InitiateCommand)} {{TicketId}}", command.TicketId);
 
-            var sagaEvent = new InitiatedSagaEvent(command.TicketId);
+            var sagaEvent = new InitiatedSagaEvent(command.TicketId.ToString());
 
-            sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(command.TicketId.ToString(), sagaEvent);
+            sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(sagaEvent);
+
+            return Task.CompletedTask;
         }
     }
 }

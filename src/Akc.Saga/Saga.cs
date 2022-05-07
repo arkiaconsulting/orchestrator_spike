@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Akc.Saga.Tests")]
 
@@ -9,27 +8,26 @@ namespace Akc.Saga
     {
         internal IEnumerable<ISagaCommand> PendingCommands => _pendingCommands;
 
-        protected readonly string id;
         private readonly ICollection<ISagaCommand> _pendingCommands = new List<ISagaCommand>();
 
-        protected Saga(string id)
+        protected void Publish<T>(T command, IMessageContext context) where T : ISagaCommand
         {
-            this.id = id;
-        }
-
-        protected void Publish<T>(T command) where T : ISagaCommand
-        {
-            _pendingCommands.Add(command);
+            if (!context.IsRehydrating)
+            {
+                _pendingCommands.Add(command);
+            }
         }
 
         internal void Rehydrate(IEnumerable<ISagaEvent> events)
         {
+            var messageContext = new AkcSagaMessageContext { IsRehydrating = true };
+
             foreach (var @event in events)
             {
-                var method = this.GetType().GetRuntimeMethods()
-                    .Single(m => m.Name == "Apply" && m.GetParameters().SingleOrDefault(p => p.ParameterType == @event.GetType()) != null);
+                var handlerType = typeof(ISagaEventHandler<>).MakeGenericType(@event.GetType());
+                var method = handlerType.GetMethod(nameof(ISagaEventHandler<ISagaEvent>.Handle));
 
-                method!.Invoke(this, new object[] { @event });
+                method!.Invoke(this, new object[] { @event, messageContext });
             }
         }
     }
