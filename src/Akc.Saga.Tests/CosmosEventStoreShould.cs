@@ -10,12 +10,12 @@ using Xunit;
 namespace Akc.Saga.Tests
 {
     [Trait("Category", "OutOfProcess")]
-    public class CosmosOutboxShould
+    public class CosmosEventStoreShould
     {
         private SagaHost SagaHost => _host.Services.GetRequiredService<SagaHost>();
         private readonly IHost _host;
 
-        public CosmosOutboxShould()
+        public CosmosEventStoreShould()
         {
             _host = Host.CreateDefaultBuilder()
                 .ConfigureServices((ctx, services) =>
@@ -26,29 +26,42 @@ namespace Akc.Saga.Tests
                         cfg.Register<MyOrderWorkflow, PaymentReceived>(e => e.OrderId);
                     })
                     .AddTestCosmos(ctx.Configuration)
-                    .AddAkcSagaAzureCosmosOutbox();
+                    .AddAkcSagaAzureCosmosEventStore();
                 })
                 .Build();
         }
 
-        [Theory(DisplayName = "Add the produced command to the outbox")]
+        [Theory(DisplayName = "Handle the order creation")]
         [AutoData]
-        public async Task Test01(string orderId)
+        internal async Task Test01(OrderCreated order)
         {
-            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(new OrderCreated(orderId));
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(order);
 
-            AssertCommandPublished(new CreateOrder(orderId));
+            AssertEventStored(order, order.OrderId);
+        }
+
+        [Theory(DisplayName = "Can ship the order")]
+        [AutoData]
+        internal async Task Test02(OrderCreated order)
+        {
+            await SagaHost.Handle<MyOrderWorkflow, OrderCreated>(order);
+
+            var payment = new PaymentReceived(order.OrderId);
+            await SagaHost.Handle<MyOrderWorkflow, PaymentReceived>(payment);
+
+            AssertEventStored(order, order.OrderId);
+            AssertEventStored(payment, order.OrderId);
         }
 
         #region Private
 
-        private void AssertCommandPublished(CreateOrder command)
+        private void AssertEventStored<T>(T @event, string orderId) where T : ISagaEvent
         {
-            var container = _host.Services.GetRequiredService<OutboxContainer>().Container;
+            var container = _host.Services.GetRequiredService<EventStoreContainer>().Container;
 
-            var items = container.GetItemLinqQueryable<CreateOrder>(allowSynchronousQueryExecution: true,
+            var items = container.GetItemLinqQueryable<CosmosSagaEvent>(allowSynchronousQueryExecution: true,
                 linqSerializerOptions: new() { PropertyNamingPolicy = Microsoft.Azure.Cosmos.CosmosPropertyNamingPolicy.CamelCase })
-                .Where(cmd => cmd.OrderId == command.OrderId)
+                .Where(e => e.SagaId == orderId && e.Type == TypeHelpers.GetEventTypeName(@event.GetType()))
                 .AsEnumerable();
 
             items.Should().ContainSingle();

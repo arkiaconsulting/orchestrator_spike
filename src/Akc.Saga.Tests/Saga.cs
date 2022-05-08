@@ -2,8 +2,16 @@
 
 namespace Akc.Saga.Tests
 {
-    internal record OrderCreated(string OrderId) : ISagaEvent;
-    internal record PaymentReceived(string OrderId) : ISagaEvent;
+    [EventTypeName("OrderCreated")]
+    internal record OrderCreated(string OrderId) : ISagaEvent
+    {
+    }
+
+    [EventTypeName("PaymentReceived")]
+    internal record PaymentReceived(string OrderId) : ISagaEvent
+    {
+    }
+
     internal record CreateOrder(string OrderId) : ISagaCommand
     {
         public string Type { get; } = nameof(CreateOrder);

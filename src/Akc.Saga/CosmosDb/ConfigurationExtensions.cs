@@ -21,9 +21,25 @@ namespace Microsoft.Extensions.DependencyInjection
                 .ValidateDataAnnotations();
 
             services
-                .AddSingleton(sp => BuildCosmosClient(sp, configureCosmosBuilder))
+                .AddSingleton(sp => BuildCosmosClient(sp, configureCosmosBuilder));
+
+            return services;
+        }
+
+        public static IServiceCollection AddAkcSagaAzureCosmosOutbox(this IServiceCollection services)
+        {
+            services
                 .AddSingleton<OutboxContainer>()
                 .AddTransient<ISagaCommandOutbox, AzureCosmosDbCommandOutbox>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddAkcSagaAzureCosmosEventStore(this IServiceCollection services)
+        {
+            services
+                .AddSingleton<EventStoreContainer>()
+                .AddTransient<ISagaEventStore, AzureCosmosDbEventStore>();
 
             return services;
         }
