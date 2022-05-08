@@ -1,6 +1,5 @@
 ﻿using Akc.Saga;
 using Akc.Saga.AzureServiceBus;
-using Akc.Saga.InMemory;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -15,7 +14,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services
                 .AddSingleton<AzureServiceBusEntityLocator>()
-                .AddSingleton<ISagaEventStore, InMemorySagaEventStore>()
                 .AddTransient<ISagaCommandPublisher, AzureServiceBusCommandPublisher>();
 
             return services;
