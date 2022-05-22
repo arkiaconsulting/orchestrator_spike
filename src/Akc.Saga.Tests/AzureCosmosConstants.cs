@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Akc.Saga.Tests
@@ -21,7 +20,6 @@ namespace Akc.Saga.Tests
                     config.OutboxContainer = OutboxContainer;
                     config.EventStoreContainer = EventStoreContainer;
                     config.PreferMsi = false;
-                    config.RegisterEvents(Assembly.GetExecutingAssembly());
                 }, builder => builder.WithConnectionModeGateway().WithLimitToEndpoint(true));
         }
     }

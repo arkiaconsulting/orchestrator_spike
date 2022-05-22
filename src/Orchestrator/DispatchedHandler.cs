@@ -29,7 +29,7 @@ namespace Orchestrator
 
             var sagaEvent = new DispatchedSagaEvent(@event.TicketId.ToString());
 
-            await sagaManager.Handle<InvoiceDepositSaga, DispatchedSagaEvent>(sagaEvent);
+            await sagaManager.Handle<InvoiceDepositSaga, DispatchedSagaEvent>(sagaEvent).ConfigureAwait(false);
         }
     }
 }

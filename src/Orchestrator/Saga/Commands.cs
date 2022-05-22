@@ -2,13 +2,9 @@
 
 namespace Orchestrator.Saga
 {
-    internal record CheckSecuritySagaCommand(string TicketId) : ISagaCommand
-    {
-        public string Type { get; } = "CheckSecurity";
-    }
+    [CommandTypeName("CheckSecurity")]
+    internal record CheckSecuritySagaCommand(string TicketId) : ISagaCommand;
 
-    internal record DispatchSagaCommand(string TicketId) : ISagaCommand
-    {
-        public string Type { get; } = "Dispatch";
-    }
+    [CommandTypeName("Dispatch")]
+    internal record DispatchSagaCommand(string TicketId) : ISagaCommand;
 }

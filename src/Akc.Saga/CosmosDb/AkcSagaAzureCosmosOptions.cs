@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using Akc.Saga;
+using System.Text.Json;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Akc.Saga.CosmosDb
 {
     public class AkcSagaAzureCosmosOptions
     {
@@ -18,17 +17,10 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public bool PreferMsi { get; set; } = true;
 
-        internal IDictionary<string, Type> NameToEventType { get; private set; } = new Dictionary<string, Type>();
-        internal IDictionary<Type, string> EventTypeToName { get; private set; } = new Dictionary<Type, string>();
-
-        public void RegisterEvents(Assembly assembly)
+        internal JsonSerializerOptions PayloadSerializerOptions = new()
         {
-            NameToEventType = assembly.GetTypes()
-                .Where(t => t.IsAssignableTo(typeof(ISagaEvent)))
-                .ToDictionary(type => TypeHelpers.GetEventTypeName(type), type => type);
-
-            EventTypeToName = NameToEventType
-                .ToDictionary(kv => kv.Value, kv => kv.Key);
-        }
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
     }
 }

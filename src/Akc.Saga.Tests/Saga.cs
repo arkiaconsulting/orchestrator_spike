@@ -12,14 +12,14 @@ namespace Akc.Saga.Tests
     {
     }
 
+    [CommandTypeName("CreateOrder")]
     internal record CreateOrder(string OrderId) : ISagaCommand
     {
-        public string Type { get; } = nameof(CreateOrder);
     }
 
+    [CommandTypeName("ShipOrder")]
     internal record ShipOrder(string OrderId) : ISagaCommand
     {
-        public string Type { get; } = nameof(ShipOrder);
     }
 
     internal class MyOrderWorkflow : Saga,

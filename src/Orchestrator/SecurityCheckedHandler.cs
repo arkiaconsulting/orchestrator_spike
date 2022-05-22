@@ -30,7 +30,7 @@ namespace Orchestrator
 
             var sagaEvent = new SecurityCheckedSagaEvent(@event.TicketId.ToString());
 
-            await sagaManager.Handle<InvoiceDepositSaga, SecurityCheckedSagaEvent>(sagaEvent);
+            await sagaManager.Handle<InvoiceDepositSaga, SecurityCheckedSagaEvent>(sagaEvent).ConfigureAwait(false);
         }
     }
 }

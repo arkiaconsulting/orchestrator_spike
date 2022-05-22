@@ -30,7 +30,8 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services
                 .AddSingleton<OutboxContainer>()
-                .AddTransient<ISagaCommandOutbox, AzureCosmosDbCommandOutbox>();
+                .AddTransient<ISagaCommandOutbox, AzureCosmosDbCommandOutbox>()
+                .AddHostedService<AzureCosmosOutboxListener>();
 
             return services;
         }
@@ -62,6 +63,8 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder
                 .WithContentResponseOnWrite(false)
                 .WithSerializerOptions(new() { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase })
+                .WithConnectionModeGateway()
+                .WithLimitToEndpoint(true)
                 .Build();
         }
     }

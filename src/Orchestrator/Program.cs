@@ -14,12 +14,17 @@ var host = new HostBuilder()
             config.Register<InvoiceDepositSaga, InitiatedSagaEvent>(e => e.TicketId);
             config.Register<InvoiceDepositSaga, SecurityCheckedSagaEvent>(e => e.TicketId);
             config.Register<InvoiceDepositSaga, DispatchedSagaEvent>(e => e.TicketId);
+            config.RegisterEvents(typeof(InitiatedSagaEvent).Assembly);
+            config.RegisterCommands(typeof(CheckSecuritySagaCommand).Assembly);
         })
         .AddAkcSagaAzureServiceBus(options =>
         {
             options.RegisterMessageEntity<CheckSecuritySagaCommand>("security-check");
             options.RegisterMessageEntity<DispatchSagaCommand>("dispatch");
         })
+        .AddAkcSagaAzureCosmosDb(ctx.Configuration)
+        .AddAkcSagaAzureCosmosEventStore()
+        .AddAkcSagaAzureCosmosOutbox()
     )
     .Build();
 

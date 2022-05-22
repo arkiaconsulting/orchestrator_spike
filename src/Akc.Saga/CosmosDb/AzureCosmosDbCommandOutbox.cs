@@ -1,37 +1,39 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
+﻿using System.Buffers;
+using System.Text.Json;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 
 namespace Akc.Saga.CosmosDb
 {
     internal class AzureCosmosDbCommandOutbox : ISagaCommandOutbox
     {
-        private static readonly JsonSerializerOptions _options = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        private readonly Container _container;
+        private readonly AkcSagaConfiguration _configuration;
+        private readonly JsonSerializerOptions _serializerOptions;
 
-        private readonly Container container;
-
-        public AzureCosmosDbCommandOutbox(OutboxContainer container)
+        public AzureCosmosDbCommandOutbox(
+            OutboxContainer container,
+            AkcSagaConfiguration configuration,
+            IOptions<AkcSagaAzureCosmosOptions> options)
         {
-            this.container = container.Container;
+            _container = container.Container;
+            _configuration = configuration;
+            _serializerOptions = options.Value.PayloadSerializerOptions;
         }
 
         async Task ISagaCommandOutbox.Publish<T>(T command)
         {
-            using var ms = container.Database.Client.ClientOptions.Serializer.ToStream(command);
+            var buffer = new ArrayBufferWriter<byte>();
+            using var sw = new Utf8JsonWriter(buffer);
+            JsonSerializer.Serialize(sw, command, command.GetType(), _serializerOptions);
+            await sw.FlushAsync();
 
-            var node = JsonNode.Parse(ms)!;
-            var id = Guid.NewGuid().ToString();
-            node.AsObject().Add("id", id);
+            var commandTypeName = _configuration.CommandTypeToName[command.GetType()];
+            var document = new CosmosDocumentEnveloppe(Guid.NewGuid().ToString(), commandTypeName, buffer.WrittenSpan.ToArray());
 
-            using var dest = new MemoryStream();
-            using var jw = new Utf8JsonWriter(dest, new() { Indented = false });
-            node.WriteTo(jw, _options);
-            jw.Flush();
+            using var ms = _container.Database.Client.ClientOptions.Serializer.ToStream(document);
 
-            _ = await container.CreateItemStreamAsync(dest, new PartitionKey(id));
+            _ = await _container.CreateItemStreamAsync(ms, new PartitionKey(document.Id));
         }
     }
 }

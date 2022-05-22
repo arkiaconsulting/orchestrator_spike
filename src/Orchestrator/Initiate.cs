@@ -31,7 +31,7 @@ namespace Orchestrator
 
             var sagaEvent = new InitiatedSagaEvent(command.TicketId.ToString());
 
-            await sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(sagaEvent);
+            await sagaManager.Handle<InvoiceDepositSaga, InitiatedSagaEvent>(sagaEvent, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

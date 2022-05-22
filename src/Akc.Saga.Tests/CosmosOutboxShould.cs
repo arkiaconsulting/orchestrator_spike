@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Akc.Saga.CosmosDb;
+using Akc.Saga.InMemory;
 using AutoFixture.Xunit2;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +10,7 @@ using Xunit;
 namespace Akc.Saga.Tests
 {
     [Trait("Category", "OutOfProcess")]
-    public class CosmosOutboxShould
+    public class CosmosOutboxShould : IAsyncLifetime
     {
         private SagaHost SagaHost => _host.Services.GetRequiredService<SagaHost>();
         private readonly IHost _host;
@@ -24,6 +24,8 @@ namespace Akc.Saga.Tests
                     {
                         cfg.Register<MyOrderWorkflow, OrderCreated>(e => e.OrderId);
                         cfg.Register<MyOrderWorkflow, PaymentReceived>(e => e.OrderId);
+                        cfg.RegisterEvents(typeof(OrderCreated).Assembly);
+                        cfg.RegisterCommands(typeof(CreateOrder).Assembly);
                     })
                     .AddTestCosmos(ctx.Configuration)
                     .AddAkcSagaAzureCosmosOutbox();
@@ -44,14 +46,24 @@ namespace Akc.Saga.Tests
 
         private void AssertCommandPublished(CreateOrder command)
         {
-            var container = _host.Services.GetRequiredService<OutboxContainer>().Container;
+            var commandPublisher = _host.Services.GetRequiredService<ISagaCommandPublisher>() as InMemorySagaCommandPublisher;
 
-            var items = container.GetItemLinqQueryable<CreateOrder>(allowSynchronousQueryExecution: true,
-                linqSerializerOptions: new() { PropertyNamingPolicy = Microsoft.Azure.Cosmos.CosmosPropertyNamingPolicy.CamelCase })
-                .Where(cmd => cmd.OrderId == command.OrderId)
-                .AsEnumerable();
+            while (!commandPublisher!.Commands.Any())
+            {
+            }
 
-            items.Should().ContainSingle();
+            commandPublisher!.Commands.Should().Contain(command);
+        }
+
+        async Task IAsyncLifetime.InitializeAsync()
+        {
+            await _host.StartAsync();
+        }
+
+        async Task IAsyncLifetime.DisposeAsync()
+        {
+            await _host.StopAsync();
+            _host.Dispose();
         }
 
         #endregion

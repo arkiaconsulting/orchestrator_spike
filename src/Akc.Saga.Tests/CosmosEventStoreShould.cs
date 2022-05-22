@@ -24,6 +24,7 @@ namespace Akc.Saga.Tests
                     {
                         cfg.Register<MyOrderWorkflow, OrderCreated>(e => e.OrderId);
                         cfg.Register<MyOrderWorkflow, PaymentReceived>(e => e.OrderId);
+                        cfg.RegisterEvents(typeof(OrderCreated).Assembly);
                     })
                     .AddTestCosmos(ctx.Configuration)
                     .AddAkcSagaAzureCosmosEventStore();

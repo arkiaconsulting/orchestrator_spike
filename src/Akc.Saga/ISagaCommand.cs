@@ -2,6 +2,5 @@
 {
     public interface ISagaCommand
     {
-        string Type { get; }
     }
 }

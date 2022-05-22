@@ -4,7 +4,7 @@
     {
         private readonly IDictionary<string, ICollection<ISagaEvent>> _events = new Dictionary<string, ICollection<ISagaEvent>>();
 
-        Task<IEnumerable<ISagaEvent>> ISagaEventStore.Load(string rootId)
+        Task<IEnumerable<ISagaEvent>> ISagaEventStore.Load(string rootId, CancellationToken cancellationToken)
         {
             if (!_events.ContainsKey(rootId))
             {
@@ -14,7 +14,7 @@
             return Task.FromResult<IEnumerable<ISagaEvent>>(_events[rootId]);
         }
 
-        Task ISagaEventStore.Save<TEvent>(string sagaId, TEvent @event)
+        Task ISagaEventStore.Save<TEvent>(string sagaId, TEvent @event, CancellationToken cancellationToken)
         {
             if (!_events.ContainsKey(sagaId))
             {
